@@ -1,0 +1,22 @@
+{
+  "name": "supply-chain-dapp",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "dev": "cd frontend && vite",
+    "build:frontend": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "ethers": "^6.14.0",
+    "hardhat": "^2.22.16"
+  }
+}
