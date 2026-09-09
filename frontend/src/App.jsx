@@ -68,7 +68,7 @@ export default function App() {
               <div className="wallet-connect-prompt">
                 <div className="wallet-connect-card">
                   <h2>Connect Your Wallet</h2>
-                  <p>Connect your MetaMask wallet to access Smart Ledger</p>
+                  <p>Connect your MetaMask wallet to access Supply Ledger</p>
                   <button onClick={connectWallet} className="primary">Connect Wallet</button>
                 </div>
               </div>

@@ -29,7 +29,7 @@ export default function Sidebar({ currentPage, onPageChange, account, isConnecte
             <div className="logo-icon">📊</div>
             {!isCollapsed && (
               <div className="logo-text">
-                <h3>Smart Ledger</h3>
+                <h3>Supply Ledger</h3>
                 <p>Supply Chain Platform</p>
               </div>
             )}
