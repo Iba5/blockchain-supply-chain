@@ -2,6 +2,16 @@
 pragma solidity ^0.8.24;
 
 contract SupplyChain {
+    enum Role {
+        None,
+        Manufacturer,
+        Distributor,
+        Retailer,
+        QualityAssurance,
+        SupplyChainManager,
+        Consumer
+    }
+
     enum Stage {
         Manufactured,
         QualityCheck,
@@ -34,9 +44,23 @@ contract SupplyChain {
     mapping(uint256 => HistoryEntry[]) private productHistory;
     mapping(address => uint256[]) private ownerProducts;
     mapping(uint256 => bool) private productExists;
+    mapping(address => Role) private userRoles;
+    address private admin;
 
     event ProductCreated(uint256 indexed id, string name, address indexed manufacturer);
     event ProductTransferred(uint256 indexed id, address indexed from, address indexed to, Stage newStage);
+    event RoleAssigned(address indexed user, Role role);
+    event RoleRevoked(address indexed user);
+
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Caller is not admin");
+        _;
+    }
+
+    modifier onlyRole(Role requiredRole) {
+        require(userRoles[msg.sender] == requiredRole, "Caller does not have required role");
+        _;
+    }
 
     modifier onlyProductOwner(uint256 productId) {
         require(productExists[productId], "Product does not exist");
@@ -44,7 +68,39 @@ contract SupplyChain {
         _;
     }
 
-    function createProduct(string calldata name, string calldata description) external returns (uint256) {
+    modifier canTransfer() {
+        Role userRole = userRoles[msg.sender];
+        require(
+            userRole == Role.Manufacturer || 
+            userRole == Role.Distributor || 
+            userRole == Role.Retailer ||
+            userRole == Role.QualityAssurance ||
+            userRole == Role.SupplyChainManager,
+            "Caller cannot transfer products"
+        );
+        _;
+    }
+
+    constructor() {
+        admin = msg.sender;
+        userRoles[msg.sender] = Role.SupplyChainManager;
+    }
+
+    function assignRole(address user, Role role) external onlyAdmin {
+        userRoles[user] = role;
+        emit RoleAssigned(user, role);
+    }
+
+    function revokeRole(address user) external onlyAdmin {
+        userRoles[user] = Role.None;
+        emit RoleRevoked(user);
+    }
+
+    function getUserRole(address user) external view returns (Role) {
+        return userRoles[user];
+    }
+
+    function createProduct(string calldata name, string calldata description) external onlyRole(Role.Manufacturer) returns (uint256) {
         require(bytes(name).length > 0, "Name is required");
 
         uint256 productId = nextProductId++;
@@ -78,7 +134,7 @@ contract SupplyChain {
         address newOwner,
         Stage newStage,
         string calldata location
-    ) external onlyProductOwner(productId) {
+    ) external onlyProductOwner(productId) canTransfer {
         require(newOwner != address(0), "New owner is zero address");
 
         address previousOwner = products[productId].currentOwner;
@@ -112,6 +168,20 @@ contract SupplyChain {
 
     function getProductsByOwner(address owner) external view returns (uint256[] memory) {
         return ownerProducts[owner];
+    }
+
+    function getAllProductIds() external view returns (uint256[] memory) {
+        uint256[] memory allIds = new uint256[](nextProductId);
+        for (uint256 i = 0; i < nextProductId; i++) {
+            if (productExists[i]) {
+                allIds[i] = i;
+            }
+        }
+        return allIds;
+    }
+
+    function getTotalProducts() external view returns (uint256) {
+        return nextProductId;
     }
 
     function _removeOwnerProduct(address owner, uint256 productId) internal {

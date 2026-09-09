@@ -126,7 +126,102 @@ Test coverage:
 - `getProductHistory` returns the correct number of entries
 - `getProductsByOwner` returns correct IDs after ownership changes
 
+## Deploying to Sepolia
+
+### 1. Set up environment variables
+Copy `.env.example` to `.env` and fill in your values:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your actual values:
+- `SEPOLIA_RPC_URL`: Your Alchemy Sepolia RPC URL (e.g., `https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY`)
+- `PRIVATE_KEY`: Your wallet private key (without the `0x` prefix)
+
+### 2. Get Sepolia test ETH
+Visit a Sepolia faucet to get test ETH for your wallet:
+- https://sepoliafaucet.com
+- https://www.alchemy.com/faucets/ethereum-sepolia
+
+### 3. Deploy to Sepolia
+```bash
+npm run deploy:sepolia
+```
+
+This writes the deployed address and ABI to `frontend/src/utils/deployedContract.json`.
+
+### 4. Configure MetaMask for Sepolia
+- Add Sepolia network if not already configured:
+  - RPC URL: `https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY`
+  - Chain ID: `11155111`
+  - Symbol: `ETH`
+- Import your wallet using the private key from `.env`
+- Switch MetaMask to Sepolia network before connecting wallet
+
+## Demo Mode (No MetaMask Required)
+
+Demo mode allows the frontend to run without MetaMask by using an embedded demo wallet. This is useful for testing or demonstrations when browser wallet extensions are not available.
+
+### ⚠️ Security Warning
+**Only use demo mode with a throwaway wallet that has no real funds.** The private key is bundled into the frontend JavaScript build and becomes publicly visible to anyone who inspects the code. Never use a wallet with real money or valuable assets in demo mode.
+
+### Setting Up Demo Mode
+
+1. Create a frontend environment file:
+```bash
+cd frontend
+cp .env.example .env
+```
+
+2. Edit `frontend/.env` with your demo configuration:
+```bash
+VITE_DEMO_MODE=true
+VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY
+VITE_DEMO_PRIVATE_KEY=your_demo_wallet_private_key_without_0x_prefix
+```
+
+3. Start the frontend:
+```bash
+cd frontend
+npm run dev
+```
+
+The app will automatically connect using the demo wallet and skip the "Connect Wallet" button. All contract interactions will use the embedded wallet address.
+
+### Toggling Between Modes
+- **Demo mode**: Set `VITE_DEMO_MODE=true` in `frontend/.env`
+- **MetaMask mode**: Set `VITE_DEMO_MODE=false` (or omit the variable)
+
+### Access Gate (Demo Protection)
+
+The frontend includes an access gate to prevent random visitors from modifying demo data during presentations. This is a soft UX feature, not a security boundary.
+
+#### How It Works
+- Users must enter an access code before the app loads
+- The code is validated client-side against `VITE_ACCESS_CODE`
+- Once unlocked, the session is stored in sessionStorage (refreshing doesn't re-prompt)
+- This gate does NOT protect against technical users who can inspect the code
+
+#### Setting Up the Access Gate
+1. Set your access code in `frontend/.env`:
+```bash
+VITE_ACCESS_CODE=your_presentation_code
+```
+
+2. When users visit the app, they'll see a password prompt
+3. After entering the correct code, the full app loads
+
+#### Security Note
+This access gate is purely for demo integrity during presentations. It does NOT provide real security because:
+- The demo wallet's private key is already bundled into the frontend build
+- The access code is client-side validation
+- Anyone with technical knowledge can bypass this by inspecting the code
+
+Use this only for live presentations to prevent accidental demo data modification by random visitors, not for protecting valuable assets or real funds.
+
 ## Important Notes
 - `frontend/src/utils/deployedContract.json` is gitignored. Run `npm run deploy:local` after every fresh node start.
 - Hardhat test accounts are publicly known. Do not use them on mainnet.
 - The local Hardhat node resets on restart. All contract state is lost.
+- Never commit real private keys or API keys to the repository.
+- Demo mode private keys are bundled into the frontend build and visible in client-side JavaScript. Only use throwaway wallets with no real funds.
