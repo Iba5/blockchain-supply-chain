@@ -1123,6 +1123,39 @@ textarea {
   color: var(--text-secondary);
 }
 
+/* Address and Location Input Groups */
+.address-input-group,
+.location-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.address-input-group input,
+.location-input-group input {
+  flex: 1;
+}
+
+.address-suggestions,
+.location-suggestions {
+  width: auto;
+  min-width: 200px;
+  font-size: 12px;
+}
+
+.input-error {
+  display: block;
+  color: var(--error-color);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.input-hint {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
 .wallet-connect-card h2 {
   margin: 0 0 12px;
   font-size: 24px;

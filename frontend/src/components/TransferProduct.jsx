@@ -6,12 +6,29 @@ import { useRole } from "../contexts/RoleContext";
 
 const stages = [
   { value: "Manufactured", label: "Manufactured", icon: "🏭" },
-  { value: "QualityCheck", label: "Quality Check", icon: "✅" },
+  { value: "Quality Check", label: "Quality Check", icon: "✅" },
   { value: "Shipped", label: "Shipped", icon: "🚚" },
-  { value: "InTransit", label: "In Transit", icon: "📦" },
-  { value: "AtWarehouse", label: "At Warehouse", icon: "🏢" },
-  { value: "AtRetailer", label: "At Retailer", icon: "🏪" },
+  { value: "In Transit", label: "In Transit", icon: "📦" },
+  { value: "At Warehouse", label: "At Warehouse", icon: "🏢" },
+  { value: "At Retailer", label: "At Retailer", icon: "🏪" },
   { value: "Sold", label: "Sold", icon: "💰" }
+];
+
+const locationSuggestions = {
+  "Manufactured": ["Factory Floor", "Production Line", "Assembly Area", "Quality Control Lab"],
+  "Quality Check": ["QA Laboratory", "Inspection Station", "Testing Facility", "Quality Center"],
+  "Shipped": ["Distribution Center", "Shipping Dock", "Logistics Hub", "Warehouse Loading Bay"],
+  "In Transit": ["Route A - Highway", "Route B - Local", "Customs Checkpoint", "Transit Hub"],
+  "At Warehouse": ["Main Warehouse", "Storage Facility", "Distribution Center", "Inventory Hub"],
+  "At Retailer": ["Retail Store Front", "Display Area", "Stock Room", "Sales Floor"],
+  "Sold": ["Customer Location", "Delivery Address", "Final Destination", "End User Site"]
+};
+
+const commonAddresses = [
+  { label: "Manufacturer A", address: "0x5B38Da6a709c396B2bC1c3D3f8E0C8E5B9A6D7F2" },
+  { label: "Distributor Hub", address: "0x7B38Da6a709c396B2bC1c3D3f8E0C8E5B9A6D7F3" },
+  { label: "Retailer Central", address: "0x8B38Da6a709c396B2bC1c3D3f8E0C8E5B9A6D7F4" },
+  { label: "QA Facility", address: "0x9B38Da6a709c396B2bC1c3D3f8E0C8E5B9A6D7F5" }
 ];
 
 export default function TransferProduct({ ownedProductIds = [], onTransferred }) {
@@ -94,13 +111,30 @@ export default function TransferProduct({ ownedProductIds = [], onTransferred })
 
           <div className="form-group">
             <label>Recipient Address *</label>
-            <input
-              type="text"
-              placeholder="0x..."
-              value={recipient}
-              onChange={(event) => setRecipient(event.target.value)}
-              required
-            />
+            <div className="address-input-group">
+              <input
+                type="text"
+                placeholder="0x..."
+                value={recipient}
+                onChange={(event) => setRecipient(event.target.value)}
+                required
+              />
+              <select 
+                className="address-suggestions"
+                onChange={(event) => setRecipient(event.target.value)}
+                value=""
+              >
+                <option value="">Quick Select...</option>
+                {commonAddresses.map((addr, index) => (
+                  <option key={index} value={addr.address}>
+                    {addr.label} - {addr.address.slice(0, 8)}...{addr.address.slice(-6)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {recipient && !isAddress(recipient) && (
+              <span className="input-error">Invalid Ethereum address format</span>
+            )}
           </div>
 
           <div className="form-group">
@@ -116,13 +150,28 @@ export default function TransferProduct({ ownedProductIds = [], onTransferred })
 
           <div className="form-group">
             <label>Location *</label>
-            <input
-              type="text"
-              placeholder="Current location"
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              required
-            />
+            <div className="location-input-group">
+              <input
+                type="text"
+                placeholder="Current location"
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                required
+              />
+              <select 
+                className="location-suggestions"
+                onChange={(event) => setLocation(event.target.value)}
+                value=""
+              >
+                <option value="">Quick Select...</option>
+                {(locationSuggestions[stage] || []).map((loc, index) => (
+                  <option key={index} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="input-hint">Suggestions based on {stage} stage</span>
           </div>
         </div>
 
