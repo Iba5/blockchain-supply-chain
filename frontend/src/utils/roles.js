@@ -5,7 +5,7 @@ export const ROLES = {
     icon: '🏭',
     color: '#4CAF50',
     description: 'Create and manage products',
-    permissions: ['create_product', 'view_all_products', 'transfer_product']
+    permissions: ['create_product', 'view_all_products', 'transfer_product', 'view_all_history']
   },
   DISTRIBUTOR: {
     id: 'distributor',
@@ -13,7 +13,7 @@ export const ROLES = {
     icon: '🚚',
     color: '#2196F3',
     description: 'Handle logistics and shipping',
-    permissions: ['view_all_products', 'transfer_product', 'update_location']
+    permissions: ['view_all_products', 'transfer_product', 'view_all_history']
   },
   RETAILER: {
     id: 'retailer',
@@ -21,7 +21,7 @@ export const ROLES = {
     icon: '🏪',
     color: '#FF9800',
     description: 'Receive and sell products',
-    permissions: ['view_all_products', 'transfer_product', 'sell_product']
+    permissions: ['view_all_products', 'transfer_product', 'view_all_history']
   },
   QUALITY_ASSURANCE: {
     id: 'quality_assurance',
@@ -29,7 +29,7 @@ export const ROLES = {
     icon: '✅',
     color: '#9C27B0',
     description: 'Inspect and verify products',
-    permissions: ['view_all_products', 'inspect_product', 'approve_quality']
+    permissions: ['view_all_products', 'view_all_history']
   },
   SUPPLY_CHAIN_MANAGER: {
     id: 'manager',
@@ -37,7 +37,7 @@ export const ROLES = {
     icon: '👔',
     color: '#F44336',
     description: 'Oversee entire supply chain',
-    permissions: ['view_all_products', 'view_analytics', 'manage_users', 'view_all_history']
+    permissions: ['view_all_products', 'view_analytics', 'manage_users', 'view_all_history', 'transfer_product']
   },
   CONSUMER: {
     id: 'consumer',
@@ -45,7 +45,7 @@ export const ROLES = {
     icon: '🛒',
     color: '#00BCD4',
     description: 'Verify product authenticity',
-    permissions: ['verify_product', 'view_product_history']
+    permissions: ['view_all_history']
   }
 };
 

@@ -8,6 +8,7 @@ import { RoleProvider } from "./contexts/RoleContext";
 import Sidebar from "./components/Sidebar";
 import ProfessionalDashboard from "./components/ProfessionalDashboard";
 import RoleManagement from "./components/RoleManagement";
+import Analytics from "./components/Analytics";
 import { BrowserProvider } from "ethers";
 
 export default function App() {
@@ -50,6 +51,8 @@ export default function App() {
         return <TransferProduct ownedProductIds={ownedProductIds} onTransferred={refresh} />;
       case 'history':
         return <ProductHistory />;
+      case 'analytics':
+        return <Analytics />;
       case 'roles':
         return <RoleManagement />;
       default:

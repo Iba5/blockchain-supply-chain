@@ -6,10 +6,8 @@ const menuItems = [
   { id: 'products', label: 'Products', icon: '📦', permission: 'view_all_products' },
   { id: 'create', label: 'Create Product', icon: '➕', permission: 'create_product' },
   { id: 'transfer', label: 'Transfer', icon: '🔄', permission: 'transfer_product' },
-  { id: 'quality', label: 'Quality Check', icon: '✅', permission: 'approve_quality' },
   { id: 'history', label: 'History', icon: '📜', permission: 'view_all_history' },
   { id: 'analytics', label: 'Analytics', icon: '📈', permission: 'view_analytics' },
-  { id: 'verify', label: 'Verify Product', icon: '🔍', permission: 'verify_product' },
   { id: 'roles', label: 'Role Management', icon: '👥', permission: 'manage_users' },
 ];
 
@@ -120,7 +118,10 @@ export default function Sidebar({ currentPage, onPageChange, account, isConnecte
                 <button
                   key={role.id}
                   className={`role-card ${currentRole.id === role.id ? 'selected' : ''}`}
-                  onClick={() => setCurrentRole(role)}
+                  onClick={() => {
+                    setCurrentRole(role);
+                    setIsRoleSelectorOpen(false);
+                  }}
                   style={{ '--role-color': role.color }}
                 >
                   <span className="role-card-icon">{role.icon}</span>
