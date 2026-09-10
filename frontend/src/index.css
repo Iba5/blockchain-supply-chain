@@ -1206,6 +1206,7 @@ textarea {
 .transfer-status {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .status-badge {
@@ -1292,6 +1293,21 @@ textarea {
 .empty-icon {
   font-size: 48px;
   opacity: 0.5;
+}
+
+.completion-badge {
+  padding: 8px 16px;
+  background: rgba(76, 175, 80, 0.15);
+  color: #81c784;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.btn-primary.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .wallet-connect-card h2 {
@@ -1535,6 +1551,14 @@ textarea {
   justify-content: space-between;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .form-title {
@@ -1576,6 +1600,11 @@ textarea {
   border-radius: var(--radius-sm);
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.role-badge.small {
+  padding: 4px 8px;
+  font-size: 11px;
 }
 
 .form-grid {

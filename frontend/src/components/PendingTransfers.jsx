@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getContract } from "../utils/contract";
-import { addressUrl, txUrl } from "../utils/network";
+import { addressUrl } from "../utils/network";
 import { useRole } from "../contexts/RoleContext";
 
 const stageLabels = [
@@ -27,7 +27,8 @@ const truncate = (value) => `${value.slice(0, 6)}...${value.slice(-4)}`;
 
 export default function PendingTransfers() {
   const { currentRole } = useRole();
-  const [pendingTransfers, setPendingTransfers] = useState([]);
+  const [ownedProducts, setOwnedProducts] = useState([]);
+  const [movedProducts, setMovedProducts] = useState(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userAddress, setUserAddress] = useState("");
@@ -38,7 +39,7 @@ export default function PendingTransfers() {
 
   useEffect(() => {
     if (userAddress) {
-      loadPendingTransfers();
+      loadOwnedProducts();
     }
   }, [userAddress]);
 
@@ -55,68 +56,91 @@ export default function PendingTransfers() {
     }
   };
 
-  const loadPendingTransfers = async () => {
+  const loadOwnedProducts = async () => {
     try {
       setLoading(true);
       setError("");
       const contract = await getContract();
-      const transferIds = await contract.getPendingTransfersForUser(userAddress);
+      const productIds = await contract.getProductsByOwner(userAddress);
       
-      const transfers = await Promise.all(
-        transferIds.map(async (id) => {
-          const transfer = await contract.getPendingTransfer(id);
+      const products = await Promise.all(
+        productIds.map(async (id) => {
           const product = await contract.getProduct(id);
-          return { ...transfer, product };
+          return product;
         })
       );
       
-      setPendingTransfers(transfers);
+      setOwnedProducts(products);
+      
+      // Clear moved products set when products are reloaded
+      // This allows moving products again after they've been updated
+      setMovedProducts(new Set());
     } catch (err) {
       setError(err.message);
-      setPendingTransfers([]);
+      setOwnedProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAcknowledge = async (productId) => {
+  const moveToNextStage = async (productId, currentStage) => {
     try {
       setError("");
+      
+      // Check if product is currently being processed
+      if (movedProducts.has(productId)) {
+        return; // Already processing, ignore duplicate click
+      }
+
       const contract = await getContract();
-      const tx = await contract.acknowledgeTransfer(productId);
+      const nextStage = currentStage + 1;
+      
+      if (nextStage > 6) {
+        setError("Product is already at final stage (Sold)");
+        return;
+      }
+
+      // Mark as being processed to prevent duplicate clicks
+      setMovedProducts(prev => new Set([...prev, productId]));
+
+      // For demo purposes, transfer to self with next stage
+      const tx = await contract.transferProduct(
+        productId, 
+        userAddress, 
+        nextStage, 
+        "Stage progression"
+      );
       await tx.wait();
-      await loadPendingTransfers();
+      
+      // Reload products to get updated state
+      await loadOwnedProducts();
+      
     } catch (err) {
+      // Remove from moved set if transaction failed
+      setMovedProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
       setError(err.message);
     }
   };
 
-  const handleComplete = async (productId) => {
-    try {
-      setError("");
-      const contract = await getContract();
-      const tx = await contract.completeTransfer(productId);
-      await tx.wait();
-      await loadPendingTransfers();
-    } catch (err) {
-      setError(err.message);
+  const getNextStageLabel = (currentStage) => {
+    const nextStage = currentStage + 1;
+    if (nextStage < stageLabels.length) {
+      return stageLabels[nextStage];
     }
+    return "Final Stage";
   };
 
-  const handleCancel = async (productId) => {
-    try {
-      setError("");
-      const contract = await getContract();
-      const tx = await contract.cancelTransfer(productId);
-      await tx.wait();
-      await loadPendingTransfers();
-    } catch (err) {
-      setError(err.message);
+  const getNextStageIcon = (currentStage) => {
+    const nextStage = currentStage + 1;
+    if (nextStage < stageLabels.length) {
+      return stageIcons[nextStage];
     }
+    return "🏁";
   };
-
-  const isSender = (transfer) => transfer.from.toLowerCase() === userAddress.toLowerCase();
-  const isRecipient = (transfer) => transfer.to.toLowerCase() === userAddress.toLowerCase();
 
   return (
     <section className="panel professional-form">
@@ -124,20 +148,25 @@ export default function PendingTransfers() {
         <div className="form-title">
           <span className="form-icon">📋</span>
           <div>
-            <h2>Pending Transfers</h2>
-            <p>Manage your pending product transfers</p>
+            <h2>Stage Progression</h2>
+            <p>Move products through supply chain stages</p>
           </div>
         </div>
-        <div className="role-badge">
-          <span>{currentRole.icon}</span>
-          <span>{currentRole.name}</span>
+        <div className="header-actions">
+          <button 
+            className="action-btn"
+            onClick={loadOwnedProducts}
+            disabled={loading}
+          >
+            🔄 Refresh
+          </button>
         </div>
       </div>
 
       {loading && (
         <div className="loading-state">
           <span className="spinner"></span>
-          <span>Loading pending transfers...</span>
+          <span>Loading your products...</span>
         </div>
       )}
 
@@ -148,96 +177,73 @@ export default function PendingTransfers() {
         </div>
       )}
 
-      {!loading && !error && pendingTransfers.length === 0 && (
+      {!loading && !error && ownedProducts.length === 0 && (
         <div className="empty-state">
           <span className="empty-icon">📭</span>
-          <p>No pending transfers found</p>
+          <p>No products found. Create a product first to manage stages.</p>
         </div>
       )}
 
-      {!loading && !error && pendingTransfers.length > 0 && (
+      {!loading && !error && ownedProducts.length > 0 && (
         <div className="transfers-list">
-          {pendingTransfers.map((transfer, index) => (
-            <div key={`${transfer.productId}-${index}`} className="transfer-card">
+          {ownedProducts.map((product) => (
+            <div key={product.id} className="transfer-card">
               <div className="transfer-header">
                 <div className="product-info">
-                  <span className="product-id">Product #{transfer.productId}</span>
-                  <span className="product-name">{transfer.product.name}</span>
+                  <span className="product-id">Product #{product.id}</span>
+                  <span className="product-name">{product.name}</span>
                 </div>
                 <div className="transfer-status">
-                  {transfer.acknowledged ? (
-                    <span className="status-badge acknowledged">✓ Acknowledged</span>
-                  ) : (
-                    <span className="status-badge pending">⏳ Pending Acknowledgment</span>
-                  )}
+                  <div className="role-badge small">
+                    <span>{currentRole.icon}</span>
+                    <span>{currentRole.name}</span>
+                  </div>
+                  <span className="status-badge acknowledged">
+                    {stageIcons[Number(product.currentStage)]} {stageLabels[Number(product.currentStage)]}
+                  </span>
                 </div>
               </div>
 
               <div className="transfer-details">
                 <div className="detail-row">
-                  <span className="detail-label">From:</span>
+                  <span className="detail-label">Description:</span>
+                  <span className="detail-value">{product.description}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Manufacturer:</span>
                   <a 
-                    href={addressUrl(transfer.from)} 
+                    href={addressUrl(product.manufacturer)} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="detail-link"
                   >
-                    {truncate(transfer.from)}
+                    {truncate(product.manufacturer)}
                   </a>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">To:</span>
-                  <a 
-                    href={addressUrl(transfer.to)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="detail-link"
-                  >
-                    {truncate(transfer.to)}
-                  </a>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Stage:</span>
+                  <span className="detail-label">Last Updated:</span>
                   <span className="detail-value">
-                    {stageIcons[Number(transfer.newStage)]} {stageLabels[Number(transfer.newStage)]}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Location:</span>
-                  <span className="detail-value">{transfer.location}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Initiated:</span>
-                  <span className="detail-value">
-                    {new Date(Number(transfer.timestamp) * 1000).toLocaleString()}
+                    {new Date(Number(product.timestamp) * 1000).toLocaleString()}
                   </span>
                 </div>
               </div>
 
               <div className="transfer-actions">
-                {isRecipient(transfer) && !transfer.acknowledged && (
+                {Number(product.currentStage) < 6 && (
                   <button 
-                    className="btn-primary"
-                    onClick={() => handleAcknowledge(transfer.productId)}
+                    className={`btn-primary ${movedProducts.has(product.id) ? 'disabled' : ''}`}
+                    onClick={() => moveToNextStage(product.id, Number(product.currentStage))}
+                    disabled={movedProducts.has(product.id)}
                   >
-                    ✅ Acknowledge Transfer
+                    {movedProducts.has(product.id) ? (
+                      <>⏳ Processing...</>
+                    ) : (
+                      <>{getNextStageIcon(Number(product.currentStage))} Move to {getNextStageLabel(Number(product.currentStage))}</>
+                    )}
                   </button>
                 )}
-                {isSender(transfer) && transfer.acknowledged && (
-                  <button 
-                    className="btn-success"
-                    onClick={() => handleComplete(transfer.productId)}
-                  >
-                    🎉 Complete Transfer
-                  </button>
-                )}
-                {isSender(transfer) && !transfer.acknowledged && (
-                  <button 
-                    className="btn-danger"
-                    onClick={() => handleCancel(transfer.productId)}
-                  >
-                    ❌ Cancel Transfer
-                  </button>
+                {Number(product.currentStage) === 6 && (
+                  <span className="completion-badge">✅ Product Journey Complete</span>
                 )}
               </div>
             </div>

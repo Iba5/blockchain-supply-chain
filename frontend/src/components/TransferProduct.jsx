@@ -58,14 +58,16 @@ export default function TransferProduct({ ownedProductIds = [], onTransferred })
       setLoading(true);
       const contract = await getContract();
       const stageIndex = stages.findIndex(s => s.value === stage);
-      const tx = await contract.initiateTransfer(productId, recipient, stageIndex, location);
+      
+      // Use standard transfer
+      const tx = await contract.transferProduct(productId, recipient, stageIndex, location);
       setTxHash(tx.hash);
       setTxStatus("Pending confirmation...");
       
       const receipt = await tx.wait();
-      setTxStatus(`✅ Transfer initiated! Waiting for recipient acknowledgment.`);
+      setTxStatus(`✅ Confirmed in block #${receipt.blockNumber}`);
       setBlockNumber(receipt.blockNumber);
-      setMessage("Transfer initiated successfully. The recipient will need to acknowledge this transfer before it can be completed.");
+      setMessage("Product transferred successfully.");
       onTransferred?.();
     } catch (err) {
       setError(err.message);
