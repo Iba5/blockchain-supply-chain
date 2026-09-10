@@ -6,6 +6,7 @@ const menuItems = [
   { id: 'products', label: 'Products', icon: '📦', permission: 'view_all_products' },
   { id: 'create', label: 'Create Product', icon: '➕', permission: 'create_product' },
   { id: 'transfer', label: 'Transfer', icon: '🔄', permission: 'transfer_product' },
+  { id: 'pending', label: 'Pending Transfers', icon: '📋', permission: 'transfer_product' },
   { id: 'history', label: 'History', icon: '📜', permission: 'view_all_history' },
   { id: 'analytics', label: 'Analytics', icon: '📈', permission: 'view_analytics' },
   { id: 'roles', label: 'Role Management', icon: '👥', permission: 'manage_users' },

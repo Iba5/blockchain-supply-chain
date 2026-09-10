@@ -9,6 +9,7 @@ import Sidebar from "./components/Sidebar";
 import ProfessionalDashboard from "./components/ProfessionalDashboard";
 import RoleManagement from "./components/RoleManagement";
 import Analytics from "./components/Analytics";
+import PendingTransfers from "./components/PendingTransfers";
 import { BrowserProvider } from "ethers";
 
 export default function App() {
@@ -49,6 +50,8 @@ export default function App() {
         return <AddProduct onCreated={refresh} />;
       case 'transfer':
         return <TransferProduct ownedProductIds={ownedProductIds} onTransferred={refresh} />;
+      case 'pending':
+        return <PendingTransfers />;
       case 'history':
         return <ProductHistory />;
       case 'analytics':

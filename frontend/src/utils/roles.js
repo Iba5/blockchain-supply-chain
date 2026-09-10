@@ -29,7 +29,7 @@ export const ROLES = {
     icon: '✅',
     color: '#9C27B0',
     description: 'Inspect and verify products',
-    permissions: ['view_all_products', 'view_all_history']
+    permissions: ['view_all_products', 'transfer_product', 'view_all_history']
   },
   SUPPLY_CHAIN_MANAGER: {
     id: 'manager',
